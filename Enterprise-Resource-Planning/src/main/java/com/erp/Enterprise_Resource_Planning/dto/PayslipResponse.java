@@ -45,7 +45,7 @@ public class PayslipResponse {
     @Schema(description = "Other deductions (base × 5%)", example = "35000.00")
     private BigDecimal other;
 
-    @Schema(description = "Net salary = base − (tax + pension + medical + other)", example = "378000.00")
+    @Schema(description = "Net salary = baseSalary − (employeeTax + pension + medicalInsurance + otherDeductions)", example = "378000.00")
     private BigDecimal netSalary;
 
     @Schema(description = "Payslip status", example = "PAID", allowableValues = {"PENDING", "PAID"})
