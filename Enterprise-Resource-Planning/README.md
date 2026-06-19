@@ -265,10 +265,12 @@ Bearer <token from /api/auth/login>
 ## Payroll Computation Formulas
 
 ```
+-- Allowances (added to gross, not deducted) --
 House         = baseSalary x 14 / 100
 Transport     = baseSalary x 14 / 100
 Gross Salary  = baseSalary + House + Transport
 
+-- Deductions (subtracted from BASE salary only) --
 EmployeeTax   = baseSalary x 30 / 100
 Pension       = baseSalary x 6  / 100
 MedicalIns.   = baseSalary x 5  / 100

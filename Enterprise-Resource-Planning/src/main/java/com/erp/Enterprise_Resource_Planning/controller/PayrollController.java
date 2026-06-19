@@ -47,16 +47,21 @@ public class PayrollController {
 
             **Payroll formulas:**
             ```
-            House         = baseSalary × 14%
-            Transport     = baseSalary × 14%
+            House         = baseSalary × 14%   (allowance)
+            Transport     = baseSalary × 14%   (allowance)
             Gross         = baseSalary + House + Transport
 
             EmployeeTax   = baseSalary × 30%
             Pension       = baseSalary × 6%
             MedicalIns.   = baseSalary × 5%
             Others        = baseSalary × 5%
-            Net           = baseSalary − (Tax + Pension + Medical + Others)
+            Net           = baseSalary − (EmployeeTax + Pension + MedicalIns + Others)
             ```
+
+            Example (base = 700,000 RWF):
+            - House = 98,000 | Transport = 98,000 | Gross = 896,000
+            - Tax = 210,000 | Pension = 42,000 | Medical = 35,000 | Others = 35,000
+            - **Net = 700,000 − (210,000 + 42,000 + 35,000 + 35,000) = 378,000**
 
             Generated payslips have status **PENDING** until approved.
 
