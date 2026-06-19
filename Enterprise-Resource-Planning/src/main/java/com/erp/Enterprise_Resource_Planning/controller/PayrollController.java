@@ -10,15 +10,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Payroll administration – ADMIN and MANAGER only.
+ * Employees access their own payslips and messages via /api/me/*.
+ */
 @RestController
 @RequestMapping("/api/payroll")
-@Tag(name = "Payroll Management", description = "Payroll generation, approval, and payslip queries")
+@Tag(name = "Payroll Management", description = "Payroll generation and approval – ADMIN / MANAGER only")
 public class PayrollController {
 
     private final PayrollService payrollService;
@@ -26,8 +28,6 @@ public class PayrollController {
     public PayrollController(PayrollService payrollService) {
         this.payrollService = payrollService;
     }
-
-    // ── Admin: generate payroll ───────────────────────────────────────────
 
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -38,24 +38,20 @@ public class PayrollController {
                 payrollService.generatePayroll(request.getMonth(), request.getYear());
         return ResponseEntity.ok(ApiResponse.ok(
                 "Payroll generated for " + request.getMonth() + "/" + request.getYear()
-                + ". Total: " + payslips.size() + " payslips.", payslips));
+                        + ". Total: " + payslips.size() + " payslips.", payslips));
     }
-
-    // ── Admin: approve payroll (fires messaging) ──────────────────────────
 
     @PostMapping("/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Approve payroll – marks payslips PAID and sends salary-credited messages (ADMIN)")
+    @Operation(summary = "Approve payroll – marks payslips PAID and sends salary-credited emails (ADMIN)")
     public ResponseEntity<ApiResponse<List<PayslipResponse>>> approve(
             @Valid @RequestBody PayrollRequest request) {
         List<PayslipResponse> payslips =
                 payrollService.approvePayroll(request.getMonth(), request.getYear());
         return ResponseEntity.ok(ApiResponse.ok(
                 "Payroll approved for " + request.getMonth() + "/" + request.getYear()
-                + ". Notifications sent.", payslips));
+                        + ". Notifications sent.", payslips));
     }
-
-    // ── Admin: view payroll for a period ─────────────────────────────────
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -67,45 +63,13 @@ public class PayrollController {
                 payrollService.getPayslipsByPeriod(month, year)));
     }
 
-    // ── Admin: view messages for a period ────────────────────────────────
-
     @GetMapping("/messages")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @Operation(summary = "View salary-credited messages for a given month/year (ADMIN or MANAGER)")
+    @Operation(summary = "View all salary-credited messages for a given month/year (ADMIN or MANAGER)")
     public ResponseEntity<ApiResponse<List<MessageResponse>>> getMessagesByPeriod(
             @RequestParam Integer month,
             @RequestParam Integer year) {
         return ResponseEntity.ok(ApiResponse.ok("Messages retrieved.",
                 payrollService.getMessagesByPeriod(month, year)));
-    }
-
-    // ── Employee: view own payslips ───────────────────────────────────────
-
-    @GetMapping("/my-payslips")
-    @Operation(summary = "View own payslips (authenticated employee)")
-    public ResponseEntity<ApiResponse<List<PayslipResponse>>> myPayslips(
-            @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.ok("Your payslips retrieved.",
-                payrollService.getMyPayslips(principal.getUsername())));
-    }
-
-    @GetMapping("/my-payslips/period")
-    @Operation(summary = "View own payslip for a specific month/year")
-    public ResponseEntity<ApiResponse<PayslipResponse>> myPayslipByPeriod(
-            @AuthenticationPrincipal UserDetails principal,
-            @RequestParam Integer month,
-            @RequestParam Integer year) {
-        return ResponseEntity.ok(ApiResponse.ok("Payslip retrieved.",
-                payrollService.getMyPayslipByPeriod(principal.getUsername(), month, year)));
-    }
-
-    // ── Employee: view own messages ───────────────────────────────────────
-
-    @GetMapping("/my-messages")
-    @Operation(summary = "View own salary-credited messages (authenticated employee)")
-    public ResponseEntity<ApiResponse<List<MessageResponse>>> myMessages(
-            @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.ok("Your messages retrieved.",
-                payrollService.getMyMessages(principal.getUsername())));
     }
 }

@@ -43,19 +43,23 @@ public class SecurityConfig {
                     "/swagger-ui.html", "/swagger-ui/**",
                     "/api-docs", "/api-docs/**"
                 ).permitAll()
-                // Only ADMIN can register new ADMIN / MANAGER accounts
+                // ADMIN only – account registration
                 .requestMatchers("/api/auth/register").hasRole("ADMIN")
-                // Admin-only writes
+                // ADMIN only – employee CRUD writes
                 .requestMatchers(HttpMethod.POST,   "/api/employees/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT,    "/api/employees/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasRole("ADMIN")
+                // ADMIN + MANAGER – employee reads
+                .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("ADMIN", "MANAGER")
+                // ADMIN only – deduction management
                 .requestMatchers("/api/deductions/**").hasRole("ADMIN")
-                // Payroll: MANAGER starts payroll, ADMIN approves
+                // ADMIN + MANAGER – payroll operations
                 .requestMatchers("/api/payroll/generate").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers("/api/payroll/approve").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/payroll").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.GET, "/api/payroll/messages").hasAnyRole("ADMIN", "MANAGER")
-                // Authenticated for everything else
+                .requestMatchers(HttpMethod.GET, "/api/payroll/**").hasAnyRole("ADMIN", "MANAGER")
+                // Any authenticated user – self-service profile endpoints
+                .requestMatchers("/api/me/**").authenticated()
+                // Catch-all – must be authenticated
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

@@ -108,6 +108,15 @@ public class EmployeeService {
         return mapToResponse(employee, employment);
     }
 
+    @Transactional(readOnly = true)
+    public EmployeeResponse getMyProfile(String email) {
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No employee record linked to account: " + email));
+        Employment employment = employmentRepository.findByEmployee(employee).orElse(null);
+        return mapToResponse(employee, employment);
+    }
+
     @Transactional
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
         Employee employee = employeeRepository.findById(id)

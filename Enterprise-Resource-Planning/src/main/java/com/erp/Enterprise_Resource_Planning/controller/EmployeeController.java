@@ -14,9 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Admin / Manager facing employee CRUD.
+ * Employees view their own profile via GET /api/me/profile.
+ */
 @RestController
 @RequestMapping("/api/employees")
-@Tag(name = "Employee Management", description = "CRUD operations for employees")
+@Tag(name = "Employee Management", description = "Employee CRUD – ADMIN and MANAGER only")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -27,23 +31,28 @@ public class EmployeeController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create employee with personal and employment details (ADMIN)")
-    public ResponseEntity<ApiResponse<EmployeeResponse>> create(@Valid @RequestBody EmployeeRequest request) {
+    @Operation(summary = "Create employee – personal + employment details (ADMIN)")
+    public ResponseEntity<ApiResponse<EmployeeResponse>> create(
+            @Valid @RequestBody EmployeeRequest request) {
         EmployeeResponse response = employeeService.createEmployee(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Employee created successfully.", response));
     }
 
     @GetMapping
-    @Operation(summary = "List all employees")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "List all employees (ADMIN or MANAGER)")
     public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.ok("Employees retrieved.", employeeService.getAllEmployees()));
+        return ResponseEntity.ok(
+                ApiResponse.ok("Employees retrieved.", employeeService.getAllEmployees()));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get employee by ID")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Get employee by ID (ADMIN or MANAGER)")
     public ResponseEntity<ApiResponse<EmployeeResponse>> getOne(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.ok("Employee retrieved.", employeeService.getEmployee(id)));
+        return ResponseEntity.ok(
+                ApiResponse.ok("Employee retrieved.", employeeService.getEmployee(id)));
     }
 
     @PutMapping("/{id}")
@@ -52,7 +61,8 @@ public class EmployeeController {
     public ResponseEntity<ApiResponse<EmployeeResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok("Employee updated.", employeeService.updateEmployee(id, request)));
+        return ResponseEntity.ok(
+                ApiResponse.ok("Employee updated.", employeeService.updateEmployee(id, request)));
     }
 
     @DeleteMapping("/{id}")
